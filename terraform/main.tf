@@ -6,15 +6,23 @@ provider "aws" {
   skip_requesting_account_id = true
   skip_metadata_api_check = true
   s3_force_path_style = true
+  # endpoints {
+  #   lambda = "http://localstack:4566"
+  # }
   endpoints {
-    lambda = "http://localstack:4566"
+    lambda = "http://${var.endpoint_domain}:4566"
   }
 }
 
 # var.lambda_zip_pathはterraform apply時にパラメータとして渡されました
 variable "lambda_zip_path" {
-    type = "string"
+    type = string
 }
+variable "endpoint_domain" {
+    type = string
+}
+
+
 
 resource "aws_lambda_function" "test_lambda" {
   filename      = var.lambda_zip_path
@@ -26,9 +34,9 @@ resource "aws_lambda_function" "test_lambda" {
 
   runtime = "python3.7"
 
-  environment {
-    variables = {
-      foo = "bar"
-    }
-  }
+  # environment {
+  #   variables = {
+  #     endpoint_domain = var.endpoint_domain
+  #   }
+  # }
 }

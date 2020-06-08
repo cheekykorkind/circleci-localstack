@@ -1,0 +1,57 @@
+
+version: 2
+jobs:
+  test:
+    docker:
+      # Primary Containerがcircleci/python:3.7-buster-nodeになる
+      - image: circleci/python:3.7-buster-node
+        environment:
+          LAMBDA_ZIP_PATH: /home/circleci/lambda.zip
+          HELLO_WORDL_PATH: /home/circleci/project/sam-lambda/hello_world
+          TERRAFORM_PATH: /home/circleci/project/terraform
+          COMMON_NETWORK: localhost # All containers run in a common network and every exposed port will be available on localhost from a primary container.
+
+      - image: localstack/localstack:0.11.0
+        name: localstack-ci-dev
+        environment:
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          AWS_DEFAULT_REGION: us-east-1
+          SERVICES: lambda,logs
+          DEBUG: 1
+          HOSTNAME_EXTERNAL: localhost
+
+    # pwd /home/circleci/project
+    # ~ /home/circleci
+    # need version check : https://releases.hashicorp.com/terraform
+    steps:
+      - checkout
+
+      - run:
+          name: install pip packages
+          command: |
+            pip -V
+            cd $HELLO_WORDL_PATH
+            pip install -t ./packages -r requirements.txt
+            zip -r9 $LAMBDA_ZIP_PATH .
+
+      - run:
+          name: install terraform 0.12.26
+          command: |
+            cd ~
+            sudo apt-get install unzip
+            wget https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
+            sudo unzip -o terraform_0.12.26_linux_amd64.zip
+            sudo mv terraform /usr/local/bin/
+            terraform --version
+
+            cd $TERRAFORM_PATH
+            terraform init
+            terraform apply -auto-approve -var="lambda_zip_path=$LAMBDA_ZIP_PATH" -var="endpoint_domain=$COMMON_NETWORK"
+            
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
