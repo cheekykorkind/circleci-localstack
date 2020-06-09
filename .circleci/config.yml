@@ -11,7 +11,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
 
           LAMBDA_ZIP_PATH: /home/circleci/lambda.zip
-          HELLO_WORDL_PATH: /home/circleci/project/sam-lambda/hello_world
+          HELLO_WORLD_PATH: /home/circleci/project/sam-lambda/hello_world
           TERRAFORM_PATH: /home/circleci/project/terraform
           
           # 全コンテナは同じネットワークになれて、Primaryコンテナからは「localhost」でアクセス可能です。
@@ -34,11 +34,16 @@ jobs:
     steps:
       - checkout
 
+      # localstackのもろもろ初期化作業終了を待ちます
+      - run:
+          name: Wait for localstack
+          command: dockerize -wait tcp://localhost:4566 -timeout 2m
+
       - run:
           name: install pip packages at packages directory
           command: |
             pip -V
-            cd $HELLO_WORDL_PATH
+            cd $HELLO_WORLD_PATH
             pip install -t ./packages -r requirements.txt
             zip -r9 $LAMBDA_ZIP_PATH .
 
@@ -52,11 +57,6 @@ jobs:
             sudo unzip -o terraform_0.12.6_linux_amd64.zip
             sudo mv terraform /usr/local/bin/
             terraform --version
-
-      # localstackのもろもろ初期化作業終了を待ちます
-      - run:
-          name: Wait for localstack
-          command: dockerize -wait tcp://localhost:4566 -timeout 1m
             
       - run:
           name: terraform apply
