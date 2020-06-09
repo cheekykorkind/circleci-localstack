@@ -6,13 +6,16 @@ jobs:
       # Primary Containerがcircleci/python:3.7-buster-nodeになる
       - image: circleci/python:3.7-buster-node
         environment:
+          # AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          # AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          # AWS_DEFAULT_REGION: us-east-1
+
           LAMBDA_ZIP_PATH: /home/circleci/lambda.zip
           HELLO_WORDL_PATH: /home/circleci/project/sam-lambda/hello_world
           TERRAFORM_PATH: /home/circleci/project/terraform
           COMMON_NETWORK: localhost # All containers run in a common network and every exposed port will be available on localhost from a primary container.
 
       - image: localstack/localstack:0.11.0
-        name: localstack-ci-dev
         environment:
           AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
           AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -36,19 +39,37 @@ jobs:
             zip -r9 $LAMBDA_ZIP_PATH .
 
       - run:
-          name: install terraform 0.12.26
+          name: install terraform 0.12.6
           command: |
             cd ~
             sudo apt-get install unzip
-            wget https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
-            sudo unzip -o terraform_0.12.26_linux_amd64.zip
+            wget https://releases.hashicorp.com/terraform/0.12.6/terraform_0.12.6_linux_amd64.zip
+            sudo unzip -o terraform_0.12.6_linux_amd64.zip
             sudo mv terraform /usr/local/bin/
             terraform --version
 
+      # wait localstack setup
+      - run:
+          name: Wait for localstack
+          command: dockerize -wait tcp://localhost:4566 -timeout 1m
+            
+      - run:
+          name: terraform apply
+          command: |
             cd $TERRAFORM_PATH
             terraform init
             terraform apply -auto-approve -var="lambda_zip_path=$LAMBDA_ZIP_PATH" -var="endpoint_domain=$COMMON_NETWORK"
-            
+
+      # - run:
+      #     name: install aws cli
+      #     command: |
+      #       sudo apt install awscli
+
+      # - run:
+      #     name: test lambda
+      #     command: |
+      #       aws lambda invoke --region us-east-1 --endpoint-url http://localhost:4566 --function-name hello_lambda --payload '{ "name": "Bob" }' response.json
+
 
 workflows:
   version: 2

@@ -6,9 +6,6 @@ provider "aws" {
   skip_requesting_account_id = true
   skip_metadata_api_check = true
   s3_force_path_style = true
-  # endpoints {
-  #   lambda = "http://localstack:4566"
-  # }
   endpoints {
     lambda = "http://${var.endpoint_domain}:4566"
   }
@@ -21,8 +18,6 @@ variable "lambda_zip_path" {
 variable "endpoint_domain" {
     type = string
 }
-
-
 
 resource "aws_lambda_function" "test_lambda" {
   filename      = var.lambda_zip_path
