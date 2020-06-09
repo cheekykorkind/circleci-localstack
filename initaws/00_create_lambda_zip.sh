@@ -13,7 +13,7 @@ cd \$TERRAFORM_PATH
 
 terraform init
 
-terraform apply -auto-approve -var="lambda_zip_path=\$LAMBDA_ZIP_PATH"
+terraform apply -auto-approve -var="lambda_zip_path=\$LAMBDA_ZIP_PATH" -var="endpoint_domain=$HOSTNAME_EXTERNAL"
 
 exit
 "
