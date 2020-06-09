@@ -11,7 +11,7 @@ provider "aws" {
   }
 }
 
-# var.lambda_zip_pathはterraform apply時にパラメータとして渡されました
+# var.lambda_zip_path、var.endpoint_domainはterraform apply時にパラメータとして渡されました
 variable "lambda_zip_path" {
     type = string
 }
@@ -28,10 +28,4 @@ resource "aws_lambda_function" "test_lambda" {
   source_code_hash = "${filebase64sha256(var.lambda_zip_path)}"
 
   runtime = "python3.7"
-
-  # environment {
-  #   variables = {
-  #     endpoint_domain = var.endpoint_domain
-  #   }
-  # }
 }
