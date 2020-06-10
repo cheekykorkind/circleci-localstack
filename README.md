@@ -5,5 +5,5 @@ https://circleci.com/docs/2.0/local-cli/#installation
 
 
 ## local circleciを実行します
-cd circleci-localstack
+cd circleci-localstack  
 circleci local execute --job test
